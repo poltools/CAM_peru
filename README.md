@@ -314,9 +314,11 @@ MIT — see [`LICENSE`](LICENSE).
 
 If you use this code, please cite the preprint:
 
-> Fasce, A., Lopez-Lopez, E., Rodríguez-Ferreiro, J., Rosales-Trabuco, J. E.,
-> & Barberia, I. (2026, April 14). *Prevalence of traditional and alternative
-> medicine in Peru, and impact of empathetic refutations on participant's
-> endorsement*. https://doi.org/10.17605/OSF.IO/CXW5U
+> Fasce, A., Rosales-Trabuco, J., Rodríguez-Ferreiro, J., Barberia, I.,
+> Pinedo-Yzaguirre, E., Nuñez, J., Ortiz-Treviños, W., Moncada, C.,
+> Reyes-Bossio, M., Carbajal-León, C., & Lopez-Lopez, E. (2026, April 14).
+> *Psychosocial predictors and justification patterns of traditional and
+> alternative medicine in Peru*.
+> https://doi.org/10.17605/OSF.IO/CXW5U
 
 This citation will be updated once the paper is published in the peer-reviewed journal.
