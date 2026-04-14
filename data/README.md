@@ -28,8 +28,13 @@ Produced by `python -m cam_peru.run_classification_micro`.
 
 ### `document_category_labels.csv`
 Per-document category assignments with technique and technique type.
-Delimiter `,`. 801 rows (one per respondent with a non-empty open-ended
-response).
+Delimiter `,`. **801 rows** shipped (one per respondent with a
+non-empty extracted reason list). Of these, three documents are
+classified as *Miscellaneous only* (code 10) and are excluded from the
+substantive analyses reported in the manuscript, which therefore cites
+**N = 798**. All 801 rows are retained in the CSV for transparency;
+notebooks that report substantive-reason analyses drop the three
+Misc-only documents before aggregation.
 
 | Column | Type | Description |
 | --- | --- | --- |

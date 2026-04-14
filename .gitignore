@@ -36,9 +36,17 @@ cache/
 
 # User-level raw and intermediate data that should not be redistributed.
 # Derived artifacts are hosted on OSF — see data/README.md.
-# This is a whitelist: ignore everything under data/ except data/README.md.
+# This is a whitelist: ignore everything under data/ except the README
+# and the shipped CAM_translations lookup (used by the word-cloud cell
+# in notebook/results.ipynb, safe to distribute).
 data/*
 !data/README.md
+!data/CAM_translations.csv
+
+# Notebook-generated scratch outputs (regeneratable by re-running the
+# notebooks). The canonical published figures live under figures/.
+notebook/figures/
+notebook/wordclouds/
 
 # Submission-bundle scratch files that must not leak into the public repo.
 docs/response_to_reviewers_nlp.md

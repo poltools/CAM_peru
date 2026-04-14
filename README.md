@@ -19,8 +19,8 @@ components are designed to be reproducible independently.
            raw survey              extraction          classification
          (TradyAlt Fase1.xlsx)   (reason lists)      (micro-reason → cat)
 
- N = 805   ─────────────────►   N = 801 responses ─► 1 517 unique
- completed  │   Azure GPT-4o   │  2 609 reasons  │    classified
+ N = 805   ─────────────────►   N = 798 analysed ─► 1 517 unique
+ completed  │   Azure GPT-4o   │  2 716 reasons  │    classified
  responses  │   extraction     │  (after human-  │    micro-reasons
             │   (temp = 0)     │   in-the-loop   │    (multi-label,
             │                  │   curation)     │    10 categories)
@@ -29,11 +29,18 @@ components are designed to be reproducible independently.
 - **Stage 1 (Reason extraction).** An Azure OpenAI GPT-4o deployment
   reads each open-ended Spanish response and returns a list of
   nominalised reasons. Four of the 805 completed responses yielded no
-  parseable reason list and were dropped; the remaining 801 responses
-  were hand-curated by domain experts.
+  parseable reason list and were dropped at this stage; the remaining
+  801 responses were hand-curated by domain experts.
 - **Stage 2 (Micro-classification).** Each of the 1 517 unique
   nominalised reasons is tagged with one or more of the 10 categories
-  below by the same LLM under a zero-shot prompt.
+  below by the same LLM under a zero-shot prompt. Three further
+  documents classified as *Miscellaneous only* (code 10, no substantive
+  category) were set aside, leaving **N = 798 documents with at least
+  one substantive reason**, matching the figure cited in the
+  manuscript. The shipped `document_category_labels.csv` retains all
+  801 parseable documents for transparency; notebooks that report
+  analyses on "substantive" reasons drop the three Misc-only documents
+  before aggregation.
 - **Stage 3 (Document-level aggregation).** Per-respondent category
   codes are produced by rolling up the micro-reason labels back to the
   original document.
@@ -227,15 +234,21 @@ All hyperparameters are centralised in
   top-p 1.0, seed 42, max tokens 150, sample size 300, random state 42.
 - **Embeddings** — `distilbert-base-multilingual-cased`, mean-pooled over
   attention-masked token states, max length 512.
-- **UMAP** — `n_neighbors=15`, `n_components=2`, `random_state=42`,
-  `metric="euclidean"`.
+- **UMAP (clustering space)** — `n_neighbors=15`, `n_components=10`,
+  `random_state=55`, `metric="euclidean"`. HDBSCAN is run on this 10-D
+  manifold.
+- **t-SNE (plotting space)** — `perplexity=30`, `n_iter=1000`,
+  `random_state=55`, projected to 2-D and 3-D for the Figure 1 panels
+  from the original 768-D embeddings (not the UMAP-reduced ones).
 - **HDBSCAN** — `min_cluster_size=20`, `min_samples=1`, `metric="euclidean"`,
   `cluster_selection_method="eom"`.
 - **Network** — cosine similarity on scaled composition vectors,
   threshold 0.9, NetworkX `spring_layout` with `seed=585`, `k=1.0`.
 - **Hierarchical clustering** — cosine distance, `linkage(method="average")`.
 
-Silhouette scores are reported on non-noise points only (HDBSCAN convention).
+Silhouette scores are computed on the 10-D UMAP clustering space over
+non-noise points only (`label != -1`, standard HDBSCAN convention), and
+returned as the third element of `compute_semantic_map`.
 
 ## Paper figures → notebook cells
 

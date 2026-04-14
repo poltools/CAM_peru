@@ -24,10 +24,11 @@ Typical use from a notebook::
 
     from cam_peru.semantic_map import compute_semantic_map, plot_semantic_map
 
-    df_2d, df_3d = compute_semantic_map(
+    df_2d, df_3d, sil = compute_semantic_map(
         texts=micro["text"],
         categories_es=micro["categoria_single"],
     )
+    print(f"Silhouette (UMAP 10-D, non-noise points): {sil:.3f}")
     plot_semantic_map(df_2d, df_3d, out_path="figures/figure_1.png")
 """
 
@@ -54,7 +55,7 @@ from .config import (
     SEMANTIC_MAP_UMAP_N_COMPONENTS,
     SEMANTIC_MAP_UMAP_N_NEIGHBORS,
 )
-from .embeddings import compute_distilbert_embeddings
+from .embeddings import compute_distilbert_embeddings, silhouette
 
 
 # --------------------------------------------------------------------------- #
@@ -64,10 +65,14 @@ from .embeddings import compute_distilbert_embeddings
 
 def _umap_hdbscan_noise_mask(
     embeddings: np.ndarray, random_state: int
-) -> tuple[np.ndarray, np.ndarray]:
-    """Return (cluster_labels, valid_mask) using UMAP→HDBSCAN.
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return (cluster_labels, valid_mask, cluster_coords) using UMAP→HDBSCAN.
 
     ``valid_mask`` is True where HDBSCAN did NOT flag the point as noise.
+    ``cluster_coords`` are the UMAP-reduced coordinates used for
+    clustering (shape ``(N, SEMANTIC_MAP_UMAP_N_COMPONENTS)``); kept so
+    that callers can compute the silhouette score in the same space
+    HDBSCAN saw.
     """
     reducer = umap.UMAP(
         n_neighbors=SEMANTIC_MAP_UMAP_N_NEIGHBORS,
@@ -79,15 +84,20 @@ def _umap_hdbscan_noise_mask(
         min_cluster_size=20, min_samples=1, metric="euclidean"
     )
     labels = clusterer.fit_predict(cluster_coords)
-    return labels, labels != -1
+    return labels, labels != -1, cluster_coords
 
 
 def _tsne(embeddings: np.ndarray, dim: int, random_state: int) -> np.ndarray:
+    # sklearn renamed ``n_iter`` → ``max_iter`` in 1.5. Detect the installed
+    # signature so the pipeline runs on both old and new sklearn.
+    import inspect
+    params = inspect.signature(TSNE.__init__).parameters
+    iter_kwarg = "max_iter" if "max_iter" in params else "n_iter"
     return TSNE(
         n_components=dim,
         perplexity=SEMANTIC_MAP_TSNE_PERPLEXITY,
-        n_iter=SEMANTIC_MAP_TSNE_N_ITER,
         random_state=random_state,
+        **{iter_kwarg: SEMANTIC_MAP_TSNE_N_ITER},
     ).fit_transform(embeddings)
 
 
@@ -97,7 +107,7 @@ def compute_semantic_map(
     *,
     embeddings: np.ndarray | None = None,
     random_state: int = SEMANTIC_MAP_RANDOM_STATE,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, float | None]:
     """Compute the 2-D and 3-D t-SNE projections used in Figure 1.
 
     Parameters
@@ -120,10 +130,13 @@ def compute_semantic_map(
 
     Returns
     -------
-    (df_2d, df_3d)
+    (df_2d, df_3d, silhouette_score)
         Data frames with columns ``text``, ``categoria_es``, ``cluster``,
         and ``dim1``/``dim2``/``dim3`` as appropriate. ``df_2d`` has
         HDBSCAN noise filtered out; ``df_3d`` retains all points.
+        ``silhouette_score`` is the HDBSCAN-convention silhouette score
+        computed on the UMAP-reduced clustering space over non-noise
+        points only (``None`` if < 2 non-noise clusters emerge).
     """
     texts = list(texts)
     categories_es = list(categories_es)
@@ -138,7 +151,10 @@ def compute_semantic_map(
             f"embeddings has {embeddings.shape[0]} rows but texts has {len(texts)}"
         )
 
-    cluster_labels, valid = _umap_hdbscan_noise_mask(embeddings, random_state)
+    cluster_labels, valid, cluster_coords = _umap_hdbscan_noise_mask(
+        embeddings, random_state
+    )
+    sil = silhouette(cluster_coords, cluster_labels)
 
     tsne_2d = _tsne(embeddings, dim=2, random_state=random_state)
     tsne_3d = _tsne(embeddings, dim=3, random_state=random_state)
@@ -154,7 +170,7 @@ def compute_semantic_map(
     df_2d = base.assign(dim1=tsne_2d[:, 0], dim2=tsne_2d[:, 1]).loc[valid].reset_index(drop=True)
     df_3d = base.assign(dim1=tsne_3d[:, 0], dim2=tsne_3d[:, 1], dim3=tsne_3d[:, 2]).reset_index(drop=True)
 
-    return df_2d, df_3d
+    return df_2d, df_3d, sil
 
 
 # --------------------------------------------------------------------------- #
@@ -166,7 +182,12 @@ def _build_color_map(
     categories: pd.Series, palette: str, dim_majority_alpha: float
 ) -> dict[str, tuple[float, float, float, float]]:
     unique = sorted(categories.unique())
-    cmap = plt.cm.get_cmap(palette, len(unique))
+    # ``plt.cm.get_cmap`` is deprecated from matplotlib 3.7; use the new
+    # colormaps registry while preserving discrete-sampling behaviour.
+    try:
+        cmap = plt.colormaps.get_cmap(palette).resampled(len(unique))
+    except AttributeError:  # matplotlib < 3.7
+        cmap = plt.cm.get_cmap(palette, len(unique))
     val_to_color = {val: cmap(i) for i, val in enumerate(unique)}
 
     if dim_majority_alpha < 1.0 and len(categories):

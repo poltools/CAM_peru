@@ -7,9 +7,14 @@ repository. It is intended to be read alongside `README.md` and
 ## 1 · Data and preprocessing
 
 ### Source
-The input is a national survey of N = 801 respondents who named a CAM
-technique they considered most effective and justified that choice in
-free text. Justifications were given in Peruvian Spanish.
+The input is a national survey of N = 805 completed responses. The
+extraction pass yields a parseable reason list for 801 of those; after
+micro-classification, three documents resolve to *Miscellaneous only*
+(code 10) and are excluded from substantive analyses, leaving
+**N = 798 documents with at least one substantive reason**. This
+matches the figure reported in the manuscript. Respondents named a
+CAM technique they considered most effective and justified that choice
+in free text. Justifications were given in Peruvian Spanish.
 
 ### Preprocessing (for the word-cloud and lexical-frequency figures)
 Implemented in `cam_peru/process_text.py`. For each response we:
@@ -131,15 +136,33 @@ Implemented in `cam_peru/embeddings.py`.
    `distilbert-base-multilingual-cased` (max length 512).
 2. The final hidden states are mean-pooled, weighted by the attention
    mask, to produce a 768-dimensional sentence vector per reason.
-3. UMAP reduces to 2-D for visualisation and clustering:
-   `n_neighbors=15`, `n_components=2`, `random_state=42`,
-   `metric="euclidean"`.
-4. HDBSCAN produces cluster labels:
-   `min_cluster_size=20`, `min_samples=1`, `metric="euclidean"`,
-   `cluster_selection_method="eom"`.
-5. Cluster quality is summarised with the silhouette score computed
-   **only over non-noise points** (`label != -1`), which is standard
-   for HDBSCAN.
+3. **Clustering space.** UMAP reduces the 768-D embeddings to 10-D
+   (`n_neighbors=15`, `n_components=10`, `random_state=55`,
+   `metric="euclidean"`). HDBSCAN is run on this 10-D manifold with
+   `min_cluster_size=20`, `min_samples=1`, `metric="euclidean"`.
+4. **Plotting space.** A separate t-SNE projection of the original
+   768-D embeddings to 2-D / 3-D (`random_state=55`, perplexity and
+   n_iter pinned in `config.py`) is used for the Figure 1 scatter
+   only. The 2-D panel drops HDBSCAN noise points (`label == -1`); the
+   3-D panel retains all points.
+5. **Cluster quality (diagnostic only).** As a diagnostic of the
+   unsupervised clustering step, the silhouette score is computed on
+   the 10-D UMAP clustering space — the same space HDBSCAN operates
+   on — **over non-noise points only** (`label != -1`), matching the
+   standard HDBSCAN convention and the original notebook's
+   `flexible_cluster_plot` implementation. Running the pipeline on the
+   shipped `classified_micro_reasons.csv` at
+   `SEMANTIC_MAP_RANDOM_STATE = 55` gives **silhouette ≈ 0.48**
+   (1 117 non-noise of 1 517 reasons), matching the value reported by
+   the original working notebook (`lab_1_v3.ipynb`, cell 91:
+   *Silhouette Score in UMAP space = 0.45*) to within stochastic drift
+   across UMAP/sklearn versions. `compute_semantic_map` returns this
+   value as its third tuple element; see `notebook/results.ipynb` cell
+   *Semantic map (Figure 1)* for the printed number. The silhouette
+   rates internal cohesion vs. separation of the HDBSCAN clusters; it
+   is **not** a measure of the agreement between the unsupervised
+   partition and the LLM-assigned taxonomic categories used to colour
+   Figure 1, nor is it computed in the 2-D t-SNE plotting space.
 
 We sampled representative sentences per cluster from the first row in
 each cluster (deterministic given a fixed random state) for figure
