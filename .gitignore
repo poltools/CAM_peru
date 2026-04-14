@@ -1,0 +1,44 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / sed backups
+*.bak
+*.orig
+
+# Caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Model / embedding caches (regeneratable)
+cache/
+*.parquet.tmp
+
+# User-level raw and intermediate data that should not be redistributed.
+# Derived artifacts are hosted on OSF — see data/README.md.
+# This is a whitelist: ignore everything under data/ except data/README.md.
+data/*
+!data/README.md
+
+# Submission-bundle scratch files that must not leak into the public repo.
+docs/response_to_reviewers_nlp.md
