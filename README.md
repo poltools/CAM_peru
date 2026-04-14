@@ -299,7 +299,11 @@ MIT — see [`LICENSE`](LICENSE).
 
 ## Citation
 
-If you use this code, please cite the corresponding paper and the OSF
-project at [`10.17605/OSF.IO/CXW5U`](https://doi.org/10.17605/OSF.IO/CXW5U).
-A Zenodo DOI for this repository will be minted at the v1.0.0 tag and
-added here once available.
+If you use this code, please cite the preprint:
+
+> Fasce, A., Lopez-Lopez, E., Rodríguez-Ferreiro, J., Rosales-Trabuco, J. E.,
+> & Barberia, I. (2026, April 14). *Prevalence of traditional and alternative
+> medicine in Peru, and impact of empathetic refutations on participant's
+> endorsement*. https://doi.org/10.17605/OSF.IO/CXW5U
+
+This citation will be updated once the paper is published in the peer-reviewed journal.
