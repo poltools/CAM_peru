@@ -189,10 +189,14 @@ We exclude code 10 from the composition vectors used for
 similarity-based analyses. Rationale: the category is defined
 negatively (absence of any substantive reason) and does not describe a
 coherent semantic direction; including it compresses the effective
-vocabulary and, because its F1 is low, adds noise more than signal. The
-sensitivity-analysis variant that keeps code 10 is produced by
-re-running the same notebook cell on the unfiltered composition
-matrix; the two variants differ by less
+vocabulary and, because its F1 is low, adds noise more than signal.
+Supplementary Tables S6 and S7 list illustrative nominalised reasons
+for the nine substantive categories (Table S6) and for the
+Miscellaneous catch-all grouped by informal sub-theme (Table S7); the
+heterogeneity visible in Table S7 is the empirical basis for the
+exclusion. The sensitivity-analysis variant that keeps code 10 is
+produced by re-running the same notebook cell on the unfiltered
+composition matrix; the two variants differ by less
 than 0.02 in cosine similarity for every technique pair, and the edge
 set at threshold 0.9 is identical across variants in the published
 data.
