@@ -124,9 +124,9 @@ that the numbers remain directly comparable to the human annotators.
 Its per-class F1 is low (**0.27 in round 1, 0.14 in round 2**) because
 the category is defined negatively — by the absence of any substantive
 reason — so small differences in rater strictness have a large
-proportional effect. This motivates the treatment of code 10 in the
-rhetorical-proximity network (see §5), where it is excluded from the
-similarity vectors.
+proportional effect. Code 10 is **retained** in the composition
+vectors used for the rhetorical-proximity network (see §5); the
+rationale is given there.
 
 ## 4 · Sentence embeddings and density-based clustering
 
@@ -185,25 +185,26 @@ respondent who named that technique. Entries are then
 2. renormalised so each row sums to 1.
 
 ### Miscellaneous (code 10)
-We exclude code 10 from the composition vectors used for
-similarity-based analyses. Rationale: the category is defined
-negatively (absence of any substantive reason) and does not describe a
-coherent semantic direction; including it compresses the effective
-vocabulary and, because its F1 is low, adds noise more than signal.
-Supplementary Tables S6 and S7 list illustrative nominalised reasons
-for the nine substantive categories (Table S6) and for the
-Miscellaneous catch-all grouped by informal sub-theme (Table S7); the
-heterogeneity visible in Table S7 is the empirical basis for the
-exclusion. The sensitivity-analysis variant that keeps code 10 is
-produced by re-running the same notebook cell on the unfiltered
-composition matrix; the two variants differ by less
-than 0.02 in cosine similarity for every technique pair, and the edge
-set at threshold 0.9 is identical across variants in the published
-data.
+Code 10 is **retained** in the composition vectors used for
+similarity-based analyses, matching the pipeline that produced the
+published Figure 4. Rationale: the entries routed to code 10 are not
+all random noise — many are affective states (tranquility, peace,
+joy), personal dispositions, or social framings (see Supplementary
+Table S7 for representative examples). Because we cannot cleanly
+separate noise from signal inside this category without a separate
+sub-schema (which we did not attempt), we preferred to retain the
+content rather than drop it. Supplementary Tables S6 and S7 make the
+composition of each category inspectable: Table S6 lists illustrative
+nominalised reasons for the nine substantive categories, Table S7
+lists representative reasons that landed in Miscellaneous, grouped
+post hoc for readability only. A sensitivity variant that drops code
+10 from the composition vectors can be produced by re-running the
+notebook cell on the column-subset matrix; see `si_s2/sensitivity.py`
+for the comparison script.
 
 ### Similarity graph
-Pairwise cosine similarity is computed on the (post-exclusion) scaled
-composition vectors. An undirected graph is built with one node per
+Pairwise cosine similarity is computed on the scaled composition
+vectors (10 categories, including Miscellaneous). An undirected graph is built with one node per
 technique; an edge `(i, j)` is added iff `cos_sim(i, j) ≥ 0.9`. Nodes
 carry `type` ("Traditional" / "Alternative") and `display` (label
 without the prefix) attributes. The published layout uses
